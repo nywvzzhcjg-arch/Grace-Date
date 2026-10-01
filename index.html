@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Be My Date?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: one centred stage, one screen at a time, like flipping through a love note. Single deliberate light look. */
+:root {
+  --blush: #ffe1ea;
+  --paper: #fff8fa;
+  --ink: #3a0b20;
+  --cherry: #e2224f;
+  --cherry-deep: #b3123a;
+  --butter: #ffd36b;
+  --muted: #8b4c64;
+  --line: #f3b9c9;
+  --display: "Caprasimo", "Cooper Black", Georgia, serif;
+  --body: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background-color: var(--blush);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M32 44c-7-5-12-9-12-14a6 6 0 0 1 12-2 6 6 0 0 1 12 2c0 5-5 9-12 14z' fill='%23f7c3d2' opacity='.55'/%3E%3C/svg%3E");
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 1rem;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+.stage {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding-inline: 16px;
+  padding-block: 32px;
+}
+.screen {
+  width: 100%;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  animation: rise .5s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+.eyebrow {
+  font-size: .8rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--cherry);
+  margin: 0;
+}
+h1, h2 {
+  font-family: var(--display);
+  font-weight: 400;
+  line-height: 1.05;
+  margin: 0;
+  text-wrap: balance;
+}
+h1 { font-size: clamp(2.3rem, 7vw, 3.8rem); }
+h2 { font-size: clamp(1.9rem, 5.5vw, 2.8rem); }
+.sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.1rem;
+  min-height: 1.6em;
+  max-width: 40ch;
+}
+
+/* Mascot */
+.mascot { width: 168px; max-width: 50vw; height: auto; animation: bob 3s ease-in-out infinite; overflow: visible; }
+.mascot.shake { animation: shake .4s; }
+.mascot.joy { animation: hop .6s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-6px) rotate(-2deg); } }
+@keyframes shake { 20%,60% { transform: translateX(-8px) rotate(-4deg); } 40%,80% { transform: translateX(8px) rotate(4deg); } }
+@keyframes hop { 50% { transform: translateY(-14px) scale(1.04); } }
+.mascot .eye { animation: blink 4s infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+.mascot .tear { opacity: 0; transition: opacity .3s; }
+.mascot.sad .tear { opacity: 1; animation: drip 1.4s ease-in infinite; }
+@keyframes drip { from { transform: translateY(0); opacity: 1; } to { transform: translateY(26px); opacity: 0; } }
+
+/* Buttons */
+.choices {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  min-height: 90px;
+}
+button { font: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.btn {
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 14px 34px;
+  font-weight: 800;
+  font-size: 1.15rem;
+  box-shadow: 0 4px 0 var(--ink);
+  transition: transform .15s, box-shadow .15s, background-color .2s;
+}
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+.btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: 0 4px 0 var(--ink); transform: none; }
+.btn-yes {
+  background: var(--cherry);
+  color: var(--paper);
+  transform: scale(var(--grow, 1));
+  transition: transform .35s cubic-bezier(.3,1.6,.5,1), background-color .2s;
+  position: relative;
+  z-index: 2;
+}
+.btn-yes:hover { background: var(--cherry-deep); }
+.btn-yes:active { transform: scale(var(--grow, 1)) translateY(3px); }
+.btn-no { background: var(--paper); color: var(--ink); }
+.no-slot { display: inline-block; }
+.btn-no.loose {
+  position: fixed;
+  z-index: 5;
+  margin: 0;
+  transition: left .28s cubic-bezier(.3,1.4,.5,1), top .28s cubic-bezier(.3,1.4,.5,1), transform .2s;
+  transform: scale(var(--shrink, 1));
+}
+.btn-no.gave-up { background: var(--butter); }
+.btn-primary { background: var(--ink); color: var(--paper); box-shadow: 0 4px 0 var(--cherry); }
+.btn-primary:active { box-shadow: 0 1px 0 var(--cherry); }
+.btn-ghost { background: transparent; box-shadow: none; border-color: transparent; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; padding-inline: 12px; font-weight: 600; font-size: 1rem; }
+.btn-ghost:active { box-shadow: none; }
+.btn-small { padding: 8px 18px; font-size: 1rem; }
+.other-row { display: flex; gap: 8px; }
+.other-row input { flex: 1; min-width: 0; }
+
+/* Gasp screen */
+.gasp { font-family: var(--display); font-size: clamp(1.8rem, 5.5vw, 2.6rem); line-height: 1.15; margin: 0; text-wrap: balance; }
+
+/* Option chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 560px;
+}
+.chip {
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color .15s, color .15s, transform .15s;
+}
+.chip:hover { transform: translateY(-2px); }
+.chip[aria-pressed="true"] { background: var(--cherry); color: var(--paper); border-color: var(--cherry-deep); }
+.chip small { font-weight: 400; opacity: .8; font-size: .85em; }
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 360px;
+  text-align: left;
+}
+.field label { font-size: .8rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.field input {
+  font: inherit;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.group-label { font-size: .8rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.group { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.nav { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.progress { display: flex; gap: 6px; }
+.progress span { width: 28px; height: 6px; border-radius: 3px; background: var(--line); }
+.progress span.on { background: var(--cherry); }
+
+/* Ticket */
+.ticket {
+  width: 100%;
+  max-width: 460px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 6px 6px 0 var(--ink);
+  text-align: left;
+  position: relative;
+  transform: rotate(-1.5deg);
+}
+.ticket-top { padding: 22px 24px 18px; display: flex; flex-direction: column; gap: 4px; }
+.ticket-top .admit { font-family: var(--display); font-size: 2rem; color: var(--cherry); line-height: 1; }
+.ticket-top .no-label { font-size: .8rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: .08em; }
+.perf {
+  height: 2px;
+  margin-inline: 18px;
+  background-image: linear-gradient(90deg, var(--ink) 50%, transparent 50%);
+  background-size: 12px 2px;
+  position: relative;
+}
+.perf::before, .perf::after {
+  content: "";
+  position: absolute;
+  top: -13px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--blush);
+  border: 2px solid var(--ink);
+}
+.perf::before { left: -33px; clip-path: inset(0 0 0 50%); }
+.perf::after { right: -33px; clip-path: inset(0 50% 0 0); }
+.ticket-body { padding: 18px 24px 24px; display: grid; gap: 14px; }
+.row { display: grid; grid-template-columns: 70px 1fr; gap: 12px; align-items: baseline; }
+.row dt { font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.row dd { margin: 0; font-weight: 600; font-size: 1.1rem; min-width: 0; overflow-wrap: anywhere; }
+dl { margin: 0; display: grid; gap: 12px; }
+.stamp {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  font-family: var(--display);
+  font-size: .95rem;
+  color: var(--cherry);
+  border: 2px solid var(--cherry);
+  border-radius: 8px;
+  padding: 2px 10px;
+  transform: rotate(8deg);
+  opacity: .9;
+}
+.toast { margin: 0; font-weight: 600; color: var(--cherry-deep); min-height: 1.5em; }
+.fallback { width: 100%; max-width: 460px; font: inherit; border: 2px solid var(--ink); border-radius: 12px; padding: 10px; background: var(--paper); color: var(--ink); resize: none; }
+
+#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+@media (max-width: 420px) {
+  .btn { padding: 12px 26px; }
+  .ticket { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<main class="stage">
+
+  <!-- 1. The question -->
+  <section class="screen" id="ask" data-screen>
+    <svg class="mascot" id="mascot" viewBox="0 0 200 180" aria-hidden="true">
+      <path d="M100 170 C 40 125, 8 92, 8 56 C 8 25, 32 8, 58 8 C 78 8, 92 20, 100 34 C 108 20, 122 8, 142 8 C 168 8, 192 25, 192 56 C 192 92, 160 125, 100 170 Z" fill="#e2224f" stroke="#3a0b20" stroke-width="5"/>
+      <ellipse cx="52" cy="92" rx="13" ry="8" fill="#ff8fab"/>
+      <ellipse cx="148" cy="92" rx="13" ry="8" fill="#ff8fab"/>
+      <ellipse class="eye" cx="74" cy="70" rx="8" ry="10" fill="#3a0b20"/>
+      <ellipse class="eye" cx="126" cy="70" rx="8" ry="10" fill="#3a0b20"/>
+      <circle cx="77" cy="66" r="3" fill="#fff8fa"/>
+      <circle cx="129" cy="66" r="3" fill="#fff8fa"/>
+      <path class="tear" d="M138 84 q5 9 0 12 q-5 -3 0 -12z" fill="#8fd3ff"/>
+      <path id="mouth" d="M82 94 Q100 112 118 94" fill="none" stroke="#3a0b20" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p class="eyebrow">A very important question</p>
+    <h1 id="askTitle">Will you go on a date with me?</h1>
+    <p class="sub" id="askSub" aria-live="polite">Take your time. There is only one right answer.</p>
+    <div class="choices">
+      <button class="btn btn-yes" id="yesBtn" type="button">Yes</button>
+      <span class="no-slot" id="noSlot"><button class="btn btn-no" id="noBtn" type="button">No</button></span>
+    </div>
+  </section>
+
+  <!-- 2. The gasp -->
+  <section class="screen" id="gaspScreen" data-screen hidden>
+    <p class="gasp">I really thought you were going to click no 😭</p>
+    <p class="sub">Okay. Composing myself. Let's plan this.</p>
+  </section>
+
+  <!-- 3. Where -->
+  <section class="screen" id="whereScreen" data-screen hidden>
+    <div class="progress" aria-hidden="true"><span class="on"></span><span></span><span></span><span></span></div>
+    <h2>Where do you want to go?</h2>
+    <p class="sub">Tap one.</p>
+    <div class="chips" id="placeChips" role="group" aria-label="Date ideas"></div>
+    <form class="field" id="otherForm">
+      <label for="otherPlace">Or suggest something else</label>
+      <div class="other-row">
+        <input id="otherPlace" type="text" maxlength="60" placeholder="Mini golf, a museum, a gig…" autocomplete="off">
+        <button class="btn btn-primary btn-small" id="otherGo" type="submit" disabled>Go</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- 4. Day -->
+  <section class="screen" id="dayScreen" data-screen hidden>
+    <div class="progress" aria-hidden="true"><span class="on"></span><span class="on"></span><span></span><span></span></div>
+    <h2>Which day works for you?</h2>
+    <div class="chips" id="dayChips" role="group" aria-label="Day"></div>
+    <div class="nav">
+      <button class="btn btn-ghost" id="dayBack" type="button">Back</button>
+    </div>
+  </section>
+
+  <!-- 5. Time -->
+  <section class="screen" id="timeScreen" data-screen hidden>
+    <div class="progress" aria-hidden="true"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+    <h2>What time?</h2>
+    <div class="chips" id="timeChips" role="group" aria-label="Time"></div>
+    <div class="nav">
+      <button class="btn btn-ghost" id="timeBack" type="button">Back</button>
+    </div>
+  </section>
+
+  <!-- 6. The ticket -->
+  <section class="screen" id="ticketScreen" data-screen hidden>
+    <div class="progress" aria-hidden="true"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
+    <h2>It's a date.</h2>
+    <article class="ticket" aria-label="Your date ticket">
+      <span class="stamp">Confirmed</span>
+      <div class="ticket-top">
+        <span class="admit">Admit two</span>
+        <span class="no-label" id="ticketNo">No. 0000</span>
+      </div>
+      <div class="perf" aria-hidden="true"></div>
+      <div class="ticket-body">
+        <dl>
+          <div class="row"><dt>Plan</dt><dd id="tPlan"></dd></div>
+          <div class="row"><dt>Day</dt><dd id="tDay"></dd></div>
+          <div class="row"><dt>Time</dt><dd id="tTime"></dd></div>
+        </dl>
+      </div>
+    </article>
+    <p class="sub">Send your answer back to the person who asked you.</p>
+    <div class="nav">
+      <button class="btn btn-primary" id="copyBtn" type="button">Copy my answer</button>
+      <button class="btn btn-ghost" id="restartBtn" type="button">Start over</button>
+    </div>
+    <p class="toast" id="toast" aria-live="polite"></p>
+    <textarea class="fallback" id="fallback" rows="3" readonly hidden aria-label="Your answer to copy"></textarea>
+  </section>
+
+</main>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const STORE_KEY = "beMyDate.answer";
+
+  // Paste your Discord webhook URL here (grace date server → channel settings → Integrations → Webhooks).
+  const WEBHOOK_URL = "https://discord.com/api/webhooks/1555366005838979082/JEFqy8R1ZPr5ceNHzvAvqosDvAposNQt44H0TL6YgjQvwwhfeKlG06uBi_QcvN0bFVgX";
+
+  function notifyDiscord(content) {
+    if (!WEBHOOK_URL.startsWith("https://discord.com/api/webhooks/")) return;
+    fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "Grace Date", content })
+    }).catch(() => {});
+  }
+
+  const PLACES = [
+    ["🎤", "Karaoke"], ["🍝", "Dinner"], ["🎬", "Cinema"], ["🌅", "Sunset walk"],
+    ["🧺", "Picnic"], ["🍦", "Ice cream"], ["🍣", "Sushi"], ["🎳", "Bowling"],
+    ["🕹️", "Arcade games"], ["🎁", "Surprise me"]
+  ];
+  const TIMES = [["Brunch", "11am"], ["Afternoon", "2pm"], ["Golden hour", "6pm"], ["Late night", "9pm"]];
+  const NO_LINES = [
+    "Take your time. There is only one right answer.",
+    "Hmm, are you sure?",
+    "Really sure?",
+    "Maybe think about it again.",
+    "The Yes button is right there.",
+    "You're breaking my heart.",
+    "I'll bring snacks.",
+    "Pretty please?",
+    "The No button is getting tired.",
+    "Last chance to change your mind.",
+    "The No button has given up."
+  ];
+  const MAX_DODGES = NO_LINES.length - 1;
+  const MOUTHS = {
+    smile: "M82 94 Q100 112 118 94",
+    worried: "M84 102 Q100 95 116 102",
+    sad: "M82 108 Q100 88 118 108",
+    joy: "M78 90 Q100 132 122 90 Z"
+  };
+
+  const state = { plan: "", day: null, time: null, ticketNo: null };
+
+  const yesBtn = $("#yesBtn"), noBtn = $("#noBtn"), noSlot = $("#noSlot");
+  const mascot = $("#mascot"), mouth = $("#mouth");
+  let dodges = 0, lastDodge = 0, asking = true;
+
+  function show(id) {
+    document.querySelectorAll("[data-screen]").forEach((s) => { s.hidden = s.id !== id; });
+    window.scrollTo(0, 0);
+  }
+
+  function setMood(mood) {
+    mouth.setAttribute("d", MOUTHS[mood]);
+    mouth.setAttribute("fill", mood === "joy" ? "#3a0b20" : "none");
+    mascot.classList.toggle("sad", mood === "sad");
+    mascot.classList.toggle("joy", mood === "joy");
+  }
+
+  /* ---------- The runaway No button ---------- */
+  function overlaps(x, y, w, h, r, margin) {
+    return x < r.right + margin && x + w > r.left - margin && y < r.bottom + margin && y + h > r.top - margin;
+  }
+
+  function dodge(px, py) {
+    if (!asking || dodges >= MAX_DODGES) return;
+    dodges++;
+    lastDodge = Date.now();
+
+    const r = noBtn.getBoundingClientRect();
+    if (!noBtn.classList.contains("loose")) {
+      noSlot.style.width = r.width + "px";
+      noSlot.style.height = r.height + "px";
+      noBtn.style.left = r.left + "px";
+      noBtn.style.top = r.top + "px";
+      noBtn.classList.add("loose");
+      document.body.appendChild(noBtn);
+      noBtn.getBoundingClientRect();
+    }
+
+    const pad = 16, w = r.width, h = r.height;
+    const W = window.innerWidth, H = window.innerHeight;
+    const yr = yesBtn.getBoundingClientRect();
+    let x, y, tries = 0;
+    do {
+      x = pad + Math.random() * Math.max(0, W - w - pad * 2);
+      y = pad + Math.random() * Math.max(0, H - h - pad * 2);
+      tries++;
+    } while (tries < 80 && (Math.hypot(x + w / 2 - px, y + h / 2 - py) < 170 || overlaps(x, y, w, h, yr, 20)));
+
+    noBtn.style.left = x + "px";
+    noBtn.style.top = y + "px";
+
+    $("#askSub").textContent = NO_LINES[dodges];
+    yesBtn.style.setProperty("--grow", Math.min(1 + dodges * 0.09, 1.9).toFixed(2));
+    noBtn.style.setProperty("--shrink", Math.max(1 - dodges * 0.04, 0.7).toFixed(2));
+    setMood(dodges >= 5 ? "sad" : "worried");
+    mascot.classList.remove("shake");
+    void mascot.getBoundingClientRect();
+    mascot.classList.add("shake");
+
+    if (dodges >= MAX_DODGES) {
+      noBtn.textContent = "Fine, yes 💖";
+      noBtn.classList.add("gave-up");
+    }
+  }
+
+  document.addEventListener("pointermove", (e) => {
+    if (!asking || e.pointerType !== "mouse" || dodges >= MAX_DODGES) return;
+    const r = noBtn.getBoundingClientRect();
+    const d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
+    if (d < Math.max(r.width, r.height) * 0.5 + 50) dodge(e.clientX, e.clientY);
+  });
+
+  noBtn.addEventListener("pointerdown", (e) => {
+    if (dodges >= MAX_DODGES) return;
+    e.preventDefault();
+    dodge(e.clientX, e.clientY);
+  });
+
+  noBtn.addEventListener("click", () => {
+    if (dodges >= MAX_DODGES) {
+      if (Date.now() - lastDodge > 450) sayYes();
+      return;
+    }
+    const r = noBtn.getBoundingClientRect();
+    dodge(r.left + r.width / 2, r.top + r.height / 2);
+  });
+
+  window.addEventListener("resize", () => {
+    if (!noBtn.classList.contains("loose")) return;
+    const r = noBtn.getBoundingClientRect();
+    noBtn.style.left = Math.min(Math.max(16, r.left), window.innerWidth - r.width - 16) + "px";
+    noBtn.style.top = Math.min(Math.max(16, r.top), window.innerHeight - r.height - 16) + "px";
+  });
+
+  /* ---------- Yes ---------- */
+  function sayYes() {
+    if (!asking) return;
+    asking = false;
+    noBtn.remove();
+    setMood("joy");
+    $("#askTitle").textContent = "YES!";
+    $("#askSub").textContent = "Best answer. Correct answer.";
+    yesBtn.hidden = true;
+    notifyDiscord(`💘 **They said YES!** (after ${dodges} ${dodges === 1 ? "try" : "tries"} at the No button)`);
+    burst(window.innerWidth / 2, window.innerHeight / 2, 140);
+    setTimeout(() => {
+      show("gaspScreen");
+      setTimeout(() => show("whereScreen"), 2200);
+    }, 1300);
+  }
+  yesBtn.addEventListener("click", sayYes);
+
+  /* ---------- Where ---------- */
+  const placeChips = $("#placeChips");
+  PLACES.forEach(([icon, name]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.setAttribute("aria-pressed", "false");
+    b.innerHTML = `<span aria-hidden="true">${icon}</span>${name}`;
+    b.addEventListener("click", () => {
+      state.plan = name;
+      placeChips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === b)));
+      setTimeout(() => show("dayScreen"), 250);
+    });
+    placeChips.appendChild(b);
+  });
+  $("#otherPlace").addEventListener("input", (e) => { $("#otherGo").disabled = !e.target.value.trim(); });
+  $("#otherForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = $("#otherPlace").value.trim();
+    if (!text) return;
+    state.plan = text;
+    placeChips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
+    show("dayScreen");
+  });
+
+  /* ---------- When ---------- */
+  function singleSelect(container, items, key, next) {
+    container.innerHTML = "";
+    items.forEach(({ value, html }) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip";
+      b.setAttribute("aria-pressed", "false");
+      b.innerHTML = html;
+      b.addEventListener("click", () => {
+        state[key] = value;
+        container.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === b)));
+        setTimeout(next, 250);
+      });
+      container.appendChild(b);
+    });
+  }
+
+  const today = new Date();
+  const days = [];
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+    const wk = d.toLocaleDateString(undefined, { weekday: "short" });
+    const dm = d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+    const long = d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+    const name = i === 0 ? "Today" : i === 1 ? "Tomorrow" : wk;
+    days.push({ value: long, html: `${name} <small>${dm}</small>` });
+  }
+  singleSelect($("#dayChips"), days, "day", () => show("timeScreen"));
+  singleSelect($("#timeChips"), TIMES.map(([n, t]) => ({ value: `${n} (${t})`, html: `${n} <small>${t}</small>` })), "time", finish);
+
+  $("#dayBack").addEventListener("click", () => show("whereScreen"));
+  $("#timeBack").addEventListener("click", () => show("dayScreen"));
+  function finish() {
+    state.ticketNo = String(Math.floor(1000 + Math.random() * 9000));
+    const answer = {
+      plan: state.plan,
+      day: state.day,
+      time: state.time,
+      ticketNo: state.ticketNo
+    };
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(answer)); } catch (e) {}
+    renderTicket(answer);
+    notifyDiscord(`🎟️ **Date locked in!**\n**Plan:** ${answer.plan}\n**Day:** ${answer.day}\n**Time:** ${answer.time}`);
+    show("ticketScreen");
+    burst(window.innerWidth / 2, window.innerHeight * 0.35, 90);
+  }
+
+  /* ---------- Ticket ---------- */
+  let message = "";
+  function renderTicket(a) {
+    $("#tPlan").textContent = a.plan;
+    $("#tDay").textContent = a.day;
+    $("#tTime").textContent = a.time;
+    $("#ticketNo").textContent = "No. " + a.ticketNo;
+    message = `Yes! 💖 Let's do ${a.plan} on ${a.day}, ${a.time}.`;
+    $("#toast").textContent = "";
+    $("#fallback").hidden = true;
+  }
+
+  $("#copyBtn").addEventListener("click", () => {
+    const fb = $("#fallback");
+    const fallback = () => {
+      fb.value = message;
+      fb.hidden = false;
+      fb.focus();
+      fb.select();
+      $("#toast").textContent = "Copy the text below and send it.";
+    };
+    try {
+      navigator.clipboard.writeText(message).then(
+        () => { $("#toast").textContent = "Copied. Now paste it in a message to them."; },
+        fallback
+      );
+    } catch (e) { fallback(); }
+  });
+
+  $("#restartBtn").addEventListener("click", () => {
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    state.plan = ""; state.day = null; state.time = null;
+    $("#otherPlace").value = "";
+    $("#otherGo").disabled = true;
+    document.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
+    dodges = 0; asking = true;
+    noBtn.className = "btn btn-no";
+    noBtn.textContent = "No";
+    noBtn.removeAttribute("style");
+    noSlot.removeAttribute("style");
+    noSlot.appendChild(noBtn);
+    yesBtn.hidden = false;
+    yesBtn.style.removeProperty("--grow");
+    $("#askTitle").textContent = "Will you go on a date with me?";
+    $("#askSub").textContent = NO_LINES[0];
+    setMood("smile");
+    show("ask");
+  });
+
+  /* ---------- Heart confetti ---------- */
+  const canvas = $("#confetti"), ctx = canvas.getContext("2d");
+  const colors = ["#e2224f", "#ff8fab", "#ffd36b", "#b3123a", "#fff8fa"];
+  let parts = [], running = false;
+
+  function sizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  sizeCanvas();
+  window.addEventListener("resize", sizeCanvas);
+
+  function heartPath(s) {
+    ctx.beginPath();
+    ctx.moveTo(0, s * 0.3);
+    ctx.bezierCurveTo(0, 0, -s * 0.5, 0, -s * 0.5, s * 0.3);
+    ctx.bezierCurveTo(-s * 0.5, s * 0.6, 0, s * 0.75, 0, s);
+    ctx.bezierCurveTo(0, s * 0.75, s * 0.5, s * 0.6, s * 0.5, s * 0.3);
+    ctx.bezierCurveTo(s * 0.5, 0, 0, 0, 0, s * 0.3);
+    ctx.closePath();
+  }
+
+  function burst(x, y, n) {
+    if (reduceMotion) return;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const v = 4 + Math.random() * 9;
+      parts.push({
+        x, y,
+        vx: Math.cos(a) * v,
+        vy: Math.sin(a) * v - 5,
+        s: 10 + Math.random() * 16,
+        r: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.25,
+        c: colors[(Math.random() * colors.length) | 0],
+        life: 1
+      });
+    }
+    if (!running) { running = true; requestAnimationFrame(tick); }
+  }
+
+  function tick() {
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    parts = parts.filter((p) => p.life > 0 && p.y < window.innerHeight + 40);
+    parts.forEach((p) => {
+      p.vy += 0.22; p.vx *= 0.985; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life -= 0.007;
+      ctx.save();
+      ctx.globalAlpha = Math.max(p.life, 0);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.r);
+      heartPath(p.s);
+      ctx.fillStyle = p.c;
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "#3a0b20";
+      ctx.stroke();
+      ctx.restore();
+    });
+    if (parts.length) requestAnimationFrame(tick);
+    else { running = false; ctx.clearRect(0, 0, window.innerWidth, window.innerHeight); }
+  }
+
+  /* ---------- Returning visitor ---------- */
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    if (saved && saved.plan) {
+      asking = false;
+      renderTicket(saved);
+      show("ticketScreen");
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
